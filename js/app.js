@@ -1,9 +1,9 @@
 /**
- * Threat Intelligence Dashboard - Core Application Engine (Enterprise Full-Stack Edition)
- * Includes Interactive Telemetry Simulator Engine, Web Audio API Sound Synthesizer, & APT Campaign Simulator
+ * Threat Intelligence Dashboard - Core Application Engine (Full-Stack Production Edition)
+ * Live Render Backend API: https://threat-intelligence-dashboard-l2wv.onrender.com/api
  */
 
-// Shared Audio Context
+// Global Audio Context & Sound Alert Synthesizer
 let audioCtx = null;
 
 function getAudioContext() {
@@ -17,7 +17,6 @@ function getAudioContext() {
   return audioCtx;
 }
 
-// Global Sound Alert Synthesizer
 window.playAlertBeep = function(isCritical = false) {
   try {
     const ctx = getAudioContext();
@@ -45,7 +44,7 @@ window.playAlertBeep = function(isCritical = false) {
   }
 };
 
-// Global Simulator Toggles & Handlers
+// Global Simulator Handlers
 window.toggleTelemetrySim = function() {
   if (!window.appState) return;
   window.appState.simActive = !window.appState.simActive;
@@ -153,6 +152,7 @@ window.viewCveDetail = function(cveId) {
   setEl("modal-product", cve.affectedProduct || "N/A");
   setEl("modal-attack-vector", cve.attackVector || "Network");
   setEl("modal-publish-date", cve.publishDate || "N/A");
+
   setEl("modal-cvss-vector", cve.cvssVector || "N/A");
   setEl("modal-description", cve.description || "No detailed description available.");
   setEl("modal-remediation", cve.remediation || "Deploy vendor security update immediately.");
@@ -171,7 +171,9 @@ window.closeCveModal = function() {
 
 // Application Controller Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  const API_BASE = "http://localhost:5000/api";
+  // Live Render Production API Endpoint (with fallback to local)
+  const PRIMARY_API = "https://threat-intelligence-dashboard-l2wv.onrender.com/api";
+  const LOCAL_API = "http://localhost:5000/api";
 
   const state = {
     alerts: [...THREAT_DATA.threatAlerts],
@@ -184,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     simActive: true,
     simAudio: true,
     backendConnected: false,
+    activeApiBase: PRIMARY_API,
     simInterval: null,
     animFrame: null
   };
@@ -210,15 +213,11 @@ document.addEventListener("DOMContentLoaded", () => {
   setupFilterListeners();
   setupReportExportListeners();
 
-  // Start Telemetry Ingestion Loop automatically
   startTelemetryIngestionLoop();
 
   window.updateDashboardMetrics = initMetrics;
   window.renderAlertsList = renderAlertsList;
 
-  /**
-   * Automatic Live Telemetry Ingestion Loop
-   */
   function startTelemetryIngestionLoop() {
     if (state.simInterval) clearInterval(state.simInterval);
 
@@ -247,14 +246,30 @@ document.addEventListener("DOMContentLoaded", () => {
   async function checkBackendHealth() {
     const badgeText = document.getElementById("backend-status-text");
     try {
-      const res = await fetch(`${API_BASE}/health`);
+      // Test Live Render Production Endpoint First
+      let res = await fetch(`${PRIMARY_API}/health`);
       if (res.ok) {
+        state.activeApiBase = PRIMARY_API;
         state.backendConnected = true;
         if (badgeText) {
-          badgeText.textContent = `CONNECTED TO REST BACKEND: :5000`;
+          badgeText.textContent = `CONNECTED TO LIVE RENDER REST BACKEND`;
           badgeText.style.color = "var(--green-low)";
         }
         fetchBackendData();
+        return;
+      }
+
+      // Fallback to Local Host
+      res = await fetch(`${LOCAL_API}/health`);
+      if (res.ok) {
+        state.activeApiBase = LOCAL_API;
+        state.backendConnected = true;
+        if (badgeText) {
+          badgeText.textContent = `CONNECTED TO LOCAL REST BACKEND: :5000`;
+          badgeText.style.color = "var(--green-low)";
+        }
+        fetchBackendData();
+        return;
       }
     } catch (e) {
       state.backendConnected = false;
@@ -268,10 +283,10 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchBackendData() {
     try {
       const [threatsRes, cveRes, actorsRes, iocRes] = await Promise.all([
-        fetch(`${API_BASE}/threats`),
-        fetch(`${API_BASE}/cve`),
-        fetch(`${API_BASE}/actors`),
-        fetch(`${API_BASE}/iocs`)
+        fetch(`${state.activeApiBase}/threats`),
+        fetch(`${state.activeApiBase}/cve`),
+        fetch(`${state.activeApiBase}/actors`),
+        fetch(`${state.activeApiBase}/iocs`)
       ]);
 
       if (threatsRes.ok) state.alerts = await threatsRes.json();
@@ -520,9 +535,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof lucide !== "undefined") lucide.createIcons();
   }
 
-  /**
-   * Enhanced Threat Actors Grid Renderer with Interactive Attack Simulation Buttons
-   */
   function renderThreatActorsGrid(filteredData = state.threatActors) {
     const container = document.getElementById("threat-actors-container");
     if (!container) return;
@@ -809,7 +821,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (state.backendConnected) {
         try {
-          await fetch(`${API_BASE}/threats/${alertId}/status`, {
+          await fetch(`${state.activeApiBase}/threats/${alertId}/status`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ status: newStatus })
