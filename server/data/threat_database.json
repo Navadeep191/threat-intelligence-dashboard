@@ -1,0 +1,112 @@
+{
+  "threatAlerts": [
+    {
+      "id": "ALT-2026-9081",
+      "title": "Active XZ Utils Backdoor Variant Detected in Linux Repositories",
+      "severity": "CRITICAL",
+      "category": "Supply Chain / Zero-Day",
+      "source": "CISA KEV Feed",
+      "timestamp": "2026-07-29 08:45:12",
+      "targetIndustry": "Cloud Service Providers, Government, Defense",
+      "threatActor": "APT29 (Cozy Bear)",
+      "status": "NEW",
+      "description": "Sophisticated malicious payload injection targeting sshd authentication via liblzma. Allows unauthenticated remote code execution with root privileges.",
+      "iocs": ["185.220.101.45", "70529d47970d473458c679a9539265f2", "malicious-xz-mirror.ru"],
+      "mitigation": "Downgrade xz-utils to version 5.4.x immediately or deploy memory integrity protection rules."
+    },
+    {
+      "id": "ALT-2026-8942",
+      "title": "LockBit 3.0 Ransomware Campaign Targeting Financial Institutions",
+      "severity": "HIGH",
+      "category": "Ransomware",
+      "source": "AlienVault OTX",
+      "timestamp": "2026-07-29 07:12:00",
+      "targetIndustry": "Financial Services, Banking, FinTech",
+      "threatActor": "LockBit Supp",
+      "status": "INVESTIGATING",
+      "description": "Phishing lures containing weaponized ISO files extracting Group Policy Object passwords to spread ransomware domain-wide within 3 hours.",
+      "iocs": ["45.142.214.98", "finance-update-auth.com", "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"],
+      "mitigation": "Block external ISO mount capabilities via Windows GPO; isolate compromised AD Domain Controllers."
+    },
+    {
+      "id": "ALT-2026-8711",
+      "title": "Volt Typhoon Zero-Day Exploitation of Edge Networking Routers",
+      "severity": "CRITICAL",
+      "category": "APT / Nation-State",
+      "source": "AbuseIPDB",
+      "timestamp": "2026-07-28 22:30:15",
+      "targetIndustry": "Critical Infrastructure, Telecom, Energy",
+      "threatActor": "Volt Typhoon",
+      "status": "INVESTIGATING",
+      "description": "Living-off-the-land (LotL) tactics targeting SOHO routers to establish persistent encrypted proxies into critical grid networks.",
+      "iocs": ["194.165.16.89", "185.244.25.10", "c2.volt-infra.net"],
+      "mitigation": "Enforce multi-factor authentication on all administrative web interfaces; rotate SSH host keys."
+    },
+    {
+      "id": "ALT-2026-8504",
+      "title": "Massive Spear-Phishing Surge Impersonating Microsoft 365 OAuth Apps",
+      "severity": "MEDIUM",
+      "category": "Phishing / Credential Theft",
+      "source": "Dark Web Monitor",
+      "timestamp": "2026-07-28 18:05:40",
+      "targetIndustry": "Healthcare, Higher Education, Legal",
+      "threatActor": "Lazarus Group (Sub-group)",
+      "status": "MITIGATED",
+      "description": "Adversary-in-the-Middle (AiTM) phishing proxies bypassing standard FIDO2 authentication via malicious consent grants.",
+      "iocs": ["login.microsoft-auth-verify.xyz", "103.145.22.14"],
+      "mitigation": "Revoke unverified OAuth app consent privileges and enforce Conditional Access App Control policies."
+    }
+  ],
+  "vulnerabilities": [
+    {
+      "cveId": "CVE-2024-3094",
+      "title": "XZ Utils LZMA Decompressor Backdoor",
+      "cvssScore": 10.0,
+      "cvssVector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "epssScore": 0.974,
+      "cisaKev": true,
+      "status": "ACTIVE EXPLOIT",
+      "affectedVendor": "Tukaani / Open Source",
+      "affectedProduct": "xz-utils 5.6.0 & 5.6.1",
+      "publishDate": "2024-03-29",
+      "attackVector": "Network (Unauthenticated)",
+      "description": "Malicious code added to xz tarballs during build process that intercepts RSA public key decryption in OpenSSH daemon.",
+      "patchUrl": "https://nvd.nist.gov/vuln/detail/CVE-2024-3094",
+      "remediation": "Downgrade xz-utils package to 5.4.6 or rebuild OpenSSH against clean liblzma."
+    },
+    {
+      "cveId": "CVE-2024-21626",
+      "title": "runC Container Breakout Vulnerability (leaky vessels)",
+      "cvssScore": 8.6,
+      "cvssVector": "CVSS:3.1/AV:L/AC:L/PR:N/UI:N/S:C/C:H/I:H/A:H",
+      "epssScore": 0.882,
+      "cisaKev": true,
+      "status": "PATCH AVAILABLE",
+      "affectedVendor": "Open Container Initiative",
+      "affectedProduct": "runc <= 1.1.11",
+      "publishDate": "2024-01-31",
+      "attackVector": "Local / Container Guest",
+      "description": "Process file descriptor leak allowing malicious container image to gain host filesystem write access.",
+      "patchUrl": "https://nvd.nist.gov/vuln/detail/CVE-2024-21626",
+      "remediation": "Upgrade runc to version 1.1.12+ across all Kubernetes nodes and Docker engines."
+    }
+  ],
+  "threatActors": [
+    {
+      "id": "TA-01",
+      "name": "APT29 (Cozy Bear / Midnight Blizzard)",
+      "origin": "Russia (SVR Foreign Intelligence)",
+      "motivation": "Espionage, Intelligence Gathering",
+      "targetedSectors": "Government, Defense, IT Supply Chain, Think Tanks",
+      "confidence": "HIGH",
+      "mitreTactics": ["T1078 - Valid Accounts", "T1195 - Supply Chain Compromise", "T1566 - Phishing"],
+      "associatedIOCs": ["185.220.101.45", "solorigate-c2.com"],
+      "keyMalware": ["Sunburst", "FoggyWeb"],
+      "activeCampaigns": "SolarWinds Supply Chain, M365 Password Spraying, XZ Utils Compromise"
+    }
+  ],
+  "iocs": [
+    { "type": "IPv4", "value": "185.220.101.45", "threatType": "C2 Server", "confidenceScore": 98, "firstSeen": "2026-07-20", "lastSeen": "2026-07-29", "status": "ACTIVE", "country": "RU", "malwareFamily": "XZ-Backdoor" },
+    { "type": "IPv4", "value": "45.142.214.98", "threatType": "Ransomware Drop Node", "confidenceScore": 92, "firstSeen": "2026-07-21", "lastSeen": "2026-07-29", "status": "ACTIVE", "country": "NL", "malwareFamily": "LockBit 3.0" }
+  ]
+}

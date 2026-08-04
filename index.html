@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cybersecurity Threat Intelligence & Monitoring Platform (Full-Stack Edition)</title>
+  
+  <!-- Google Fonts & Lucide Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Master SOC Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+
+  <div class="app-container">
+    <!-- Top Header Navigation Bar -->
+    <header class="top-header">
+      <div class="brand-container">
+        <div class="brand-logo">
+          <i data-lucide="shield-alert"></i>
+        </div>
+        <div class="brand-text">
+          <h1>CYBERTHREAT INTEL PLATFORM</h1>
+          <p>Full-Stack Enterprise SOC Engine & REST API Backend</p>
+        </div>
+      </div>
+
+      <div class="header-status-bar">
+        <!-- Telemetry Feed Simulator Toolbar -->
+        <div class="simulator-control-bar">
+          <span style="color: var(--text-muted); font-size: 0.75rem; font-weight: 600;">SIMULATOR:</span>
+          <button id="btn-toggle-sim" class="sim-btn active" onclick="toggleTelemetrySim()">
+            <i data-lucide="pause"></i> LIVE INGESTION
+          </button>
+          <button id="btn-toggle-audio" class="sim-btn" onclick="toggleSimAudio()">
+            <i data-lucide="volume-2"></i> SOUND ON
+          </button>
+        </div>
+
+        <!-- Dynamic REST API Connection Badge -->
+        <div id="backend-status-badge" class="system-status-indicator">
+          <div class="pulse-dot"></div>
+          <span id="backend-status-text">CONNECTING TO REST BACKEND...</span>
+        </div>
+
+        <div class="clock-display">
+          <i data-lucide="clock"></i>
+          <span id="live-clock">2026-07-31 10:00:00 UTC</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Body Workspace -->
+    <div class="main-wrapper">
+      
+      <!-- Navigation Sidebar -->
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-tab="overview">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Executive Overview</span>
+        </div>
+        <div class="nav-item" data-tab="attack-map">
+          <i data-lucide="globe"></i>
+          <span>Global Attack Canvas Map</span>
+        </div>
+        <div class="nav-item" data-tab="threat-feeds">
+          <i data-lucide="rss"></i>
+          <span>Threat Alert Aggregator</span>
+        </div>
+        <div class="nav-item" data-tab="vulnerabilities">
+          <i data-lucide="bug"></i>
+          <span>Vulnerability Radar (CVE)</span>
+        </div>
+        <div class="nav-item" data-tab="mitre-matrix">
+          <i data-lucide="grid"></i>
+          <span>MITRE ATT&CK Matrix</span>
+        </div>
+        <div class="nav-item" data-tab="risk-calculator">
+          <i data-lucide="sliders"></i>
+          <span>NIST Risk Calculator</span>
+        </div>
+        <div class="nav-item" data-tab="threat-actors">
+          <i data-lucide="users-round"></i>
+          <span>Threat Actors & APTs</span>
+        </div>
+        <div class="nav-item" data-tab="ioc-database">
+          <i data-lucide="database"></i>
+          <span>IOC Directory</span>
+        </div>
+        <div class="nav-item" data-tab="reports">
+          <i data-lucide="file-text"></i>
+          <span>Deliverables & Reports</span>
+        </div>
+
+        <div class="sidebar-footer">
+          <h4>Backend Architecture</h4>
+          <p><strong>REST Server:</strong> http://localhost:5000/api</p>
+          <p><strong>Database:</strong> JSON Database Storage</p>
+          <p><strong>Format:</strong> STIX 2.1 JSON & REST API</p>
+        </div>
+      </nav>
+
+      <!-- Main Tab Content Area -->
+      <main class="content-area">
+
+        <!-- ==================== TAB 1: EXECUTIVE OVERVIEW ==================== -->
+        <section id="tab-overview" class="tab-pane active">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>SOC Executive Threat Posture</h2>
+              <p>Aggregated real-time metrics across multi-source security feeds and active vulnerability radars.</p>
+            </div>
+            <button class="btn-primary" onclick="window.print()">
+              <i data-lucide="printer"></i> Export Executive Summary
+            </button>
+          </div>
+
+          <!-- Top Metrics Cards Grid -->
+          <div class="metrics-grid">
+            <div class="metric-card">
+              <div class="metric-icon critical">
+                <i data-lucide="shield-alert"></i>
+              </div>
+              <div class="metric-data">
+                <div class="val text-red" id="metric-risk-score">--</div>
+                <div class="lbl">Org Risk Posture Score</div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon high">
+                <i data-lucide="flame"></i>
+              </div>
+              <div class="metric-data">
+                <div class="val text-orange" id="metric-critical-alerts">--</div>
+                <div class="lbl">Active Critical Alerts</div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon cyan">
+                <i data-lucide="bug"></i>
+              </div>
+              <div class="metric-data">
+                <div class="val text-cyan" id="metric-active-cves">--</div>
+                <div class="lbl">Exploited CVEs Tracked</div>
+              </div>
+            </div>
+
+            <div class="metric-card">
+              <div class="metric-icon purple">
+                <i data-lucide="users"></i>
+              </div>
+              <div class="metric-data">
+                <div class="val" style="color: var(--purple-accent);" id="metric-active-actors">--</div>
+                <div class="lbl">Monitored APT Groups</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Analytics Charts Section -->
+          <div class="dashboard-row">
+            <div class="widget-card">
+              <div class="widget-header">
+                <h3><i data-lucide="trending-up" class="text-cyan"></i> 7-Day Cyber Threat Vector Trends</h3>
+                <span class="badge badge-cyan">LIVE TELEMETRY</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartThreatTrend"></canvas>
+              </div>
+            </div>
+
+            <div class="widget-card">
+              <div class="widget-header">
+                <h3><i data-lucide="pie-chart" class="text-red"></i> Threat Vector Distribution</h3>
+                <span class="badge badge-purple">STIX / TAXII</span>
+              </div>
+              <div class="chart-container">
+                <canvas id="chartCategoryBreakdown"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Active Threat Ticker -->
+          <div class="widget-card">
+            <div class="widget-header">
+              <h3><i data-lucide="bell-ring" class="text-orange"></i> Recent Ingested Telemetry Feed</h3>
+              <a href="#" onclick="document.querySelector('[data-tab=threat-feeds]').click();" style="color: var(--cyan-primary); font-size: 0.85rem; text-decoration: none;">View Feed Aggregator &rarr;</a>
+            </div>
+            <div id="threat-alerts-summary" class="threat-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TAB 2: GLOBAL ATTACK CANVAS MAP ==================== -->
+        <section id="tab-attack-map" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>Real-Time Global Cyber Attack Canvas Map</h2>
+              <p>Live 2D projection rendering origin-target attack trajectories, energy pulses, and active cyber warfare telemetry.</p>
+            </div>
+          </div>
+
+          <div class="attack-map-container">
+            <canvas id="attackMapCanvas"></canvas>
+            
+            <div class="map-legend">
+              <div class="legend-item"><div class="legend-dot" style="background: var(--red-critical);"></div><span>Critical Zero-Day / RCE Arc</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background: var(--orange-high);"></div><span>Ransomware / APT Vector</span></div>
+              <div class="legend-item"><div class="legend-dot" style="background: var(--yellow-medium);"></div><span>Phishing / Credential Theft</span></div>
+            </div>
+
+            <div class="map-overlay-stats">
+              <div><strong style="color: var(--cyan-primary);" id="map-active-arcs">6</strong> Active Trajectories</div>
+              <div><strong style="color: var(--red-critical);">3</strong> High Severity Nodes</div>
+              <div><strong style="color: var(--green-low);">99.9%</strong> Map Telemetry Sync</div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TAB 3: THREAT ALERTS AGGREGATOR ==================== -->
+        <section id="tab-threat-feeds" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>Threat Intelligence Feed Aggregator</h2>
+              <p>Multi-source ingestion stream combining CISA KEV, AlienVault OTX, AbuseIPDB, and Dark Web feeds.</p>
+            </div>
+          </div>
+
+          <!-- Filter Toolbar -->
+          <div class="filter-toolbar">
+            <div class="search-input-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="alert-search-input" placeholder="Search threats, IOCs, target industries, or actors...">
+            </div>
+            <select id="alert-severity-filter" class="filter-select">
+              <option value="ALL">All Severities</option>
+              <option value="CRITICAL">Critical Only</option>
+              <option value="HIGH">High Only</option>
+              <option value="MEDIUM">Medium Only</option>
+            </select>
+          </div>
+
+          <div id="threat-alerts-container" class="threat-list">
+            <!-- Dynamic threat alert items rendered via JS -->
+          </div>
+        </section>
+
+        <!-- ==================== TAB 4: VULNERABILITY RADAR (CVE) ==================== -->
+        <section id="tab-vulnerabilities" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>Vulnerability & CVE Radar</h2>
+              <p>Searchable vulnerability database with CVSS v3/v4 scores, EPSS percentiles, and CISA KEV indicators.</p>
+            </div>
+          </div>
+
+          <div class="filter-toolbar">
+            <div class="search-input-box">
+              <i data-lucide="search"></i>
+              <input type="text" id="cve-search-input" placeholder="Search by CVE ID (e.g. CVE-2024-3094), vendor, or keyword...">
+            </div>
+          </div>
+
+          <div class="widget-card">
+            <div class="table-responsive">
+              <table class="cyber-table">
+                <thead>
+                  <tr>
+                    <th>CVE Identifier</th>
+                    <th>Vulnerability Title</th>
+                    <th>CVSS Score</th>
+                    <th>EPSS Risk</th>
+                    <th>CISA KEV</th>
+                    <th>Exploit Status</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody id="cve-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TAB 5: MITRE ATT&CK MATRIX GRID ==================== -->
+        <section id="tab-mitre-matrix" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>14-Tactic MITRE ATT&CK Enterprise Matrix</h2>
+              <p>Standardized framework visualizing adversary tactics, technique coverage, and threat actor alignment.</p>
+            </div>
+          </div>
+
+          <div id="mitre-matrix-container" class="mitre-grid-container">
+            <!-- Rendered dynamically via JS -->
+          </div>
+        </section>
+
+        <!-- ==================== TAB 6: NIST RISK CALCULATOR ==================== -->
+        <section id="tab-risk-calculator" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>NIST CSF 2.0 Risk & Compliance Calculator</h2>
+              <p>Adjust security parameters to dynamically evaluate organizational threat exposure and posture grade.</p>
+            </div>
+          </div>
+
+          <div class="calculator-panel">
+            <div class="widget-card">
+              <h3 style="color: var(--cyan-primary); margin-bottom: 1.5rem;"><i data-lucide="sliders"></i> Security Posture Sliders</h3>
+              
+              <div class="slider-group">
+                <div class="slider-label"><span>MFA Enforcement Rate (%)</span><strong id="val-mfa">85%</strong></div>
+                <input type="range" id="slider-mfa" min="0" max="100" value="85" class="slider-input" oninput="recalculateCompliance()">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-label"><span>EDR Endpoint Coverage (%)</span><strong id="val-edr">90%</strong></div>
+                <input type="range" id="slider-edr" min="0" max="100" value="90" class="slider-input" oninput="recalculateCompliance()">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-label"><span>Unpatched CVE Exposure Count</span><strong id="val-cve">3 CVEs</strong></div>
+                <input type="range" id="slider-cve" min="0" max="25" value="3" class="slider-input" oninput="recalculateCompliance()">
+              </div>
+
+              <div class="slider-group">
+                <div class="slider-label"><span>Zero Trust Micro-Segmentation</span><strong id="val-zt">70%</strong></div>
+                <input type="range" id="slider-zt" min="0" max="100" value="70" class="slider-input" oninput="recalculateCompliance()">
+              </div>
+            </div>
+
+            <div class="compliance-dial-box">
+              <div id="compliance-grade-circle" class="grade-circle">A-</div>
+              <h3 style="color: var(--text-primary); font-size: 1.25rem;">NIST CSF 2.0 Compliance Readiness</h3>
+              <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 0.5rem;" id="compliance-status-desc">
+                Strong identity controls and EDR deployment. Minimal exposure to unpatched KEV vulnerabilities.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TAB 7: THREAT ACTORS & APTS ==================== -->
+        <section id="tab-threat-actors" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>Threat Actor Profiles & MITRE ATT&CK Alignment</h2>
+              <p>Tactics, Techniques, and Procedures (TTPs) of nation-state APTs and cybercrime cartels.</p>
+            </div>
+          </div>
+
+          <div id="threat-actors-container" class="actor-grid">
+            <!-- Rendered via JS -->
+          </div>
+        </section>
+
+        <!-- ==================== TAB 8: IOC DIRECTORY ==================== -->
+        <section id="tab-ioc-database" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>Indicators of Compromise (IOC) Directory</h2>
+              <p>Catalog of malicious IPs, domains, SHA256 hashes, and C2 servers with confidence scores.</p>
+            </div>
+            <button class="btn-primary" onclick="exportIOCsToCSV()">
+              <i data-lucide="download"></i> Export IOCs (CSV)
+            </button>
+          </div>
+
+          <div class="widget-card">
+            <div class="table-responsive">
+              <table class="cyber-table">
+                <thead>
+                  <tr>
+                    <th>IOC Type</th>
+                    <th>Indicator Value</th>
+                    <th>Threat Classification</th>
+                    <th>Confidence Score</th>
+                    <th>First Observed</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody id="ioc-table-body">
+                  <!-- Rendered via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- ==================== TAB 9: DELIVERABLES & REPORTS ==================== -->
+        <section id="tab-reports" class="tab-pane">
+          <div class="page-header">
+            <div class="page-title">
+              <h2>Project Deliverables & Documentation Suite</h2>
+              <p>Exportable reports, data source schemas, STIX 2.1 exports, security recommendations, and presentation decks.</p>
+            </div>
+            <div style="display: flex; gap: 0.5rem;">
+              <button id="btn-export-stix" class="btn-primary" onclick="exportSTIXJSON()">
+                <i data-lucide="code"></i> Export STIX 2.1 JSON
+              </button>
+              <button id="btn-export-pdf" class="btn-secondary">
+                <i data-lucide="printer"></i> Save Executive PDF
+              </button>
+            </div>
+          </div>
+
+          <!-- Deliverable 5: Presentation Slide Deck Viewer -->
+          <div class="report-deliverable-card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+              <h3 style="color: var(--cyan-primary); display: flex; align-items: center; gap: 0.5rem;">
+                <i data-lucide="presentation"></i> Deliverable 5: Executive Presentation Slide Deck
+              </h3>
+              <span id="slide-counter" class="badge badge-cyan">Slide 1 of 3</span>
+            </div>
+
+            <div class="presentation-viewer">
+              <div id="presentation-slide-content">
+                <!-- Slide rendered dynamically via JS -->
+              </div>
+
+              <div class="slide-controls">
+                <button class="btn-secondary" onclick="prevSlide()">
+                  <i data-lucide="chevron-left"></i> Previous Slide
+                </button>
+                <button class="btn-primary" onclick="nextSlide()">
+                  Next Slide <i data-lucide="chevron-right"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Deliverable 3: Data Source Documentation -->
+          <div class="report-deliverable-card">
+            <h3 style="color: var(--cyan-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="database"></i> Deliverable 3: Data Source Documentation & Taxonomy
+            </h3>
+            <div id="data-sources-container" class="threat-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+          <!-- Deliverable 4: Security Recommendations Report -->
+          <div class="report-deliverable-card">
+            <h3 style="color: var(--cyan-primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              <i data-lucide="shield-check"></i> Deliverable 4: Actionable Security Recommendations
+            </h3>
+            <div id="recommendations-container" class="threat-list">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- Sleek SOC Glassmorphism CVE Detail Modal Popup -->
+  <div id="cve-modal-overlay" class="modal-overlay" onclick="if(event.target === this) closeCveModal()">
+    <div class="modal-box">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <i data-lucide="shield-alert" style="color: var(--cyan-primary); font-size: 1.5rem;"></i>
+          <div>
+            <h3 id="modal-cve-id" style="color: var(--cyan-primary); font-family: var(--font-code); font-size: 1.25rem;">CVE Details</h3>
+            <p id="modal-cve-title" style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 0.15rem;">Vulnerability Overview</p>
+          </div>
+        </div>
+        <button class="modal-close-btn" onclick="closeCveModal()">&times;</button>
+      </div>
+
+      <div class="modal-body" style="display: flex; flex-direction: column; gap: 1.25rem; margin-top: 1rem;">
+        <!-- Severity & Score Bar -->
+        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; background: rgba(15, 23, 42, 0.7); padding: 0.85rem 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+          <div>
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; display: block;">CVSS Score</span>
+            <span id="modal-cvss-score" class="badge badge-critical" style="font-size: 0.9rem;">--</span>
+          </div>
+          <div style="border-left: 1px solid var(--border-color); padding-left: 0.75rem;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; display: block;">EPSS Risk Percentile</span>
+            <span id="modal-epss-score" style="font-family: var(--font-code); font-size: 0.95rem; color: var(--purple-accent); font-weight: 700;">--</span>
+          </div>
+          <div style="border-left: 1px solid var(--border-color); padding-left: 0.75rem;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; display: block;">CISA KEV Status</span>
+            <span id="modal-cisa-kev" class="badge badge-cyan">--</span>
+          </div>
+          <div style="border-left: 1px solid var(--border-color); padding-left: 0.75rem;">
+            <span style="font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; display: block;">Exploit Status</span>
+            <span id="modal-exploit-status" class="badge badge-high">--</span>
+          </div>
+        </div>
+
+        <!-- Attack Vector & Products -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; font-size: 0.85rem; background: rgba(30, 41, 59, 0.4); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+          <div>
+            <strong style="color: var(--cyan-primary);">Affected Vendor:</strong>
+            <div id="modal-vendor" style="color: var(--text-primary); margin-top: 0.2rem;">--</div>
+          </div>
+          <div>
+            <strong style="color: var(--cyan-primary);">Affected Product:</strong>
+            <div id="modal-product" style="color: var(--text-primary); margin-top: 0.2rem;">--</div>
+          </div>
+          <div>
+            <strong style="color: var(--cyan-primary);">Attack Vector:</strong>
+            <div id="modal-attack-vector" style="color: var(--text-primary); margin-top: 0.2rem;">--</div>
+          </div>
+          <div>
+            <strong style="color: var(--cyan-primary);">Publish Date:</strong>
+            <div id="modal-publish-date" style="color: var(--text-primary); margin-top: 0.2rem;">--</div>
+          </div>
+        </div>
+
+        <!-- CVSS Vector String -->
+        <div>
+          <span style="font-size: 0.75rem; color: var(--text-muted); uppercase;">CVSS v3.1 Vector String:</span>
+          <div id="modal-cvss-vector" style="font-family: var(--font-code); font-size: 0.8rem; background: #0f172a; padding: 0.5rem 0.75rem; border-radius: 0.35rem; color: var(--cyan-primary); border: 1px solid var(--border-color); margin-top: 0.25rem;">
+            --
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <h4 style="font-size: 0.85rem; color: var(--text-primary); margin-bottom: 0.35rem;">Vulnerability Technical Description</h4>
+          <p id="modal-description" style="font-size: 0.85rem; color: var(--text-secondary); line-height: 1.5; background: rgba(15, 23, 42, 0.5); padding: 0.85rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+            --
+          </p>
+        </div>
+
+        <!-- Remediation & Action -->
+        <div style="background: rgba(0, 255, 102, 0.05); border: 1px solid rgba(0, 255, 102, 0.3); padding: 1rem; border-radius: 0.5rem;">
+          <h4 style="font-size: 0.85rem; color: var(--green-low); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.35rem;">
+            <i data-lucide="shield-check"></i> Recommended Remediation SLA
+          </h4>
+          <p id="modal-remediation" style="font-size: 0.85rem; color: var(--text-primary);">
+            --
+          </p>
+        </div>
+      </div>
+
+      <div class="modal-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+        <a id="modal-patch-url" href="#" target="_blank" class="btn-primary" style="text-decoration: none;">
+          <i data-lucide="external-link"></i> View Official NVD Advisory
+        </a>
+        <button class="btn-secondary" onclick="closeCveModal()">Close Window</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Custom Scripts -->
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      if (typeof lucide !== "undefined") {
+        lucide.createIcons();
+      }
+    });
+
+    // Close modal on Escape key press
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeCveModal();
+    });
+  </script>
+</body>
+</html>
